@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db = SQLAlchemy(app)
 
 
@@ -11,10 +11,10 @@ class CodeSpeedyBlog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False, unique=True)
     content = db.Column(db.Text, nullable=False)
-    posted_by = db.Column(db.String(20), nullable=False, default='N/A')
+    posted_by = db.Column(db.String(100), nullable=False, default='N/A')
     posted_on = db.Column(db.DateTime, nullable=False,
                             default=datetime.utcnow())
-
+    num_like = db.Column(db.Integer, default=0)
     def __repr__(self):
         return self.title
 
@@ -22,9 +22,8 @@ class CodeSpeedyBlog(db.Model):
 db.create_all()
 db.session.commit()
 
-@app.route('/')
 @app.route('/home')
-@app.route('/CodeSpeedy')
+@app.route('/')
 def Welcome():
     return render_template('index.html')
 
@@ -62,7 +61,7 @@ def edit(id):
     to_edit = CodeSpeedyBlog.query.get_or_404(id)
     if request.method == 'POST':
         to_edit.title = request.form['title']
-        to_edit.author = request.form['author']
+        to_edit.posted_by = request.form['author']
         to_edit.content = request.form['post']
         db.session.commit()
         return redirect('/posts')
@@ -74,6 +73,15 @@ def delete(id):
     db.session.delete(to_delete)
     db.session.commit()
     return redirect('/posts')
-    
+@app.route('/posts/like/<int:id>', methods=['GET', 'POST'])
+def like(id):
+    to_like = CodeSpeedyBlog.query.get_or_404(id)
+    if request.method == 'POST':
+       to_like.num_like = request.form['numlike'] + 1
+       db.session.commit()
+       return redirect('/posts')
+    else:
+        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+        return render_template('posts.html', posts=all_posts)
 if __name__ == "__main__":
     app.run(debug=True)

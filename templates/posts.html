@@ -1,3 +1,4 @@
+<script src="C:\Users\Van Sang\Desktop\Flasky\like.js"></script>
 {% extends 'base.html' %}
 {% block head %}
 <title>Posts Page </title>
@@ -17,7 +18,7 @@
     {% if post.author %}
     <small>Written By {{post.posted_by}} on {{post.posted_on}}</small>
     {% else%}
-    <small>Written by Anonymous on {{post.posted_on}}</small>
+    <small>Written by {{post.posted_by}} on {{post.posted_on}}</small>
     {% endif %}
     <p style="white-space: pre-wrap">{{post.content}}</p>
     <br>
@@ -26,6 +27,10 @@
     <a href="/posts/edit/{{post.id}}"><img
             src="https://www.2g-eng.com/wp-content/uploads/2016/01/design-engineering-icon-small.png" height="50px"
             width="50px"></a>
+    <a href="/posts/like/{{post.id}}" onclick="like()"><img
+             src="https://www.iconpacks.net/icons/2/free-icon-instagram-like-3507.png" height="50px"
+             width="50px"></a>
+    <small id="numlike">{{post. num_like}}</small>
     <hr>
     {% endfor %}
 
