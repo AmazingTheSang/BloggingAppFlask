@@ -90,7 +90,7 @@ def posts():
     if request.method == 'POST':
         post_title = request.form['title']
         post_content = request.form['post']
-        post_author = request.form['author']
+        post_author = session['curruser']
         new_post = CodeSpeedyBlog(title=post_title,
                         content=post_content, posted_by=post_author)
         db.session.add(new_post)
@@ -99,16 +99,17 @@ def posts():
         all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
         name = session['curruser']
         return render_template('posts.html', posts=all_posts,msg=name)
-    # else:
-    #     all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
-    #     return render_template('posts.html', posts=all_posts,msg=name)
+    else:
+        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+        name = session['curruser']
+        return render_template('posts.html', posts=all_posts,msg=name)
 
 @app.route('/posts/new', methods=['GET', 'POST'])
 def new_post():
     if request.method == 'POST':
         post_title = request.form['title']
         post_content = request.form['post']
-        post_author = request.form['author']
+        post_author = session['curruser']
         new_post = CodeSpeedyBlog(title=post_title,
                         content=post_content, posted_by=post_author)
         db.session.add(new_post)
@@ -125,7 +126,6 @@ def edit(id):
     to_edit = CodeSpeedyBlog.query.get_or_404(id)
     if request.method == 'POST':
         to_edit.title = request.form['title']
-        to_edit.posted_by = request.form['author']
         to_edit.content = request.form['post']
         db.session.commit()
         all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
@@ -141,16 +141,20 @@ def delete(id):
     all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
     name = session['curruser']
     return render_template('posts.html', posts=all_posts,msg=name)
-@app.route('/posts/like/<int:id>', methods=['GET', 'POST'])
-def like(id):
-    to_like = CodeSpeedyBlog.query.get_or_404(id)
-    if request.method == 'POST':
-       to_like.num_like = request.form['numlike'] + 1
-       db.session.commit()
-       all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
-       return render_template('posts.html', posts=all_posts,msg=name)
-    else:
-        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
-        return render_template('posts.html', posts=all_posts)
+@app.route('/logout')
+def logout():
+    session.pop('curruser',None)
+    return redirect('/login')
+# @app.route('/posts/like/<int:id>', methods=['GET', 'POST'])
+# def like(id):
+#     to_like = CodeSpeedyBlog.query.get_or_404(id)
+#     if request.method == 'POST':
+#        to_like.num_like = request.form['numlike'] + 1
+#        db.session.commit()
+#        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+#        return render_template('posts.html', posts=all_posts,msg=name)
+#     else:
+#         all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+#         return render_template('posts.html', posts=all_posts)
 if __name__ == "__main__":
     app.run(debug=True)
