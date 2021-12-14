@@ -1,9 +1,10 @@
 import sqlite3
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request,session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import re
 app = Flask(__name__)
+app.secret_key = "super secret key"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db = SQLAlchemy(app)
 
@@ -25,13 +26,29 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     def __repr__(self):
         return '<User %r>' % self.username
-
 db.create_all()
 db.session.commit()
 @app.route('/')
 @app.route('/login',methods=['GET', 'POST'])
 def login():
-    return render_template('login.html')
+    msg = ''
+    if request.method == 'POST':
+         user_name = request.form['Username']
+         session['curruser'] = request.form['Username']
+         user_pwd = request.form['psw']
+         conn = sqlite3.connect('database.db')
+         cursorObj = conn.cursor()
+         cursorObj.execute('SELECT * FROM user WHERE username = ? AND password = ?', (user_name, user_pwd))
+         account = cursorObj.fetchone()
+         if account:
+             all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+             return render_template('posts.html', posts=all_posts,msg=user_name)
+         else:
+             msg = 'Incorrect username or password !'
+             return render_template('login.html',msg=msg)   
+    else:
+      msg = 'Incorrect username or password !'
+      return render_template('login.html',msg=msg)
 @app.route('/signup',  methods=['GET', 'POST'])
 def signup():
      msg = ''
@@ -43,9 +60,14 @@ def signup():
         conn = sqlite3.connect('database.db')
         cursorObj = conn.cursor()
         cursorObj.execute('SELECT * FROM user WHERE username = ?', (user_name, ))
-        rows = cursorObj.fetchone()
-        if rows:
+        name = cursorObj.fetchone()
+        cursorObj.execute('SELECT * FROM user WHERE email = ?', (user_email, ))
+        mail = cursorObj.fetchone()
+        if name:
             msg = 'Username already exists !'
+            return render_template('signup.html',msg=msg)
+        elif mail:
+            msg = 'Email already register !'
             return render_template('signup.html',msg=msg)
         elif not re.match(r'[^@]+@[^@]+\.[^@]+',user_email):
             msg = 'Invalid email address !'
@@ -74,10 +96,12 @@ def posts():
         db.session.add(new_post)
         db.session.commit()
 
-        return redirect('/posts')
-    else:
         all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
-        return render_template('posts.html', posts=all_posts)
+        name = session['curruser']
+        return render_template('posts.html', posts=all_posts,msg=name)
+    # else:
+    #     all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+    #     return render_template('posts.html', posts=all_posts,msg=name)
 
 @app.route('/posts/new', methods=['GET', 'POST'])
 def new_post():
@@ -89,9 +113,13 @@ def new_post():
                         content=post_content, posted_by=post_author)
         db.session.add(new_post)
         db.session.commit()
-        return redirect('/posts')
+        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+        name = session['curruser']
+        return render_template('posts.html', posts=all_posts,msg=name)
     else:
-        return render_template('new_post.html')
+        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+        name = session['curruser']
+        return render_template('new_post.html',posts=all_posts,msg=name)
 @app.route('/posts/edit/<int:id>', methods=['GET', 'POST'])
 def edit(id):
     to_edit = CodeSpeedyBlog.query.get_or_404(id)
@@ -100,7 +128,9 @@ def edit(id):
         to_edit.posted_by = request.form['author']
         to_edit.content = request.form['post']
         db.session.commit()
-        return redirect('/posts')
+        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+        name = session['curruser']
+        return render_template('posts.html', posts=all_posts,msg=name)
     else:
         return render_template('edit.html', post=to_edit)
 @app.route('/posts/delete/<int:id>')
@@ -108,14 +138,17 @@ def delete(id):
     to_delete = CodeSpeedyBlog.query.get_or_404(id)
     db.session.delete(to_delete)
     db.session.commit()
-    return redirect('/posts')
+    all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+    name = session['curruser']
+    return render_template('posts.html', posts=all_posts,msg=name)
 @app.route('/posts/like/<int:id>', methods=['GET', 'POST'])
 def like(id):
     to_like = CodeSpeedyBlog.query.get_or_404(id)
     if request.method == 'POST':
        to_like.num_like = request.form['numlike'] + 1
        db.session.commit()
-       return redirect('/posts')
+       all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+       return render_template('posts.html', posts=all_posts,msg=name)
     else:
         all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
         return render_template('posts.html', posts=all_posts)
