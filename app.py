@@ -1,3 +1,4 @@
+import re
 from flask import Flask, render_template, redirect, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -25,8 +26,10 @@ db.session.commit()
 @app.route('/home')
 @app.route('/')
 def Welcome():
-    return render_template('index.html')
-
+    return render_template('login.html')
+@app.route('/signup')
+def signup():
+    return render_template('signup.html')
 @app.route('/posts',  methods=['GET', 'POST'])
 def posts():
     if request.method == 'POST':
