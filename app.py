@@ -1,3 +1,4 @@
+from os import name
 import sqlite3
 from flask import Flask, render_template, redirect, request,session
 from flask_sqlalchemy import SQLAlchemy
@@ -149,12 +150,14 @@ def logout():
 # def like(id):
 #     to_like = CodeSpeedyBlog.query.get_or_404(id)
 #     if request.method == 'POST':
-#        to_like.num_like = request.form['numlike'] + 1
+#        to_like.num_like = to_like.num_like+1
 #        db.session.commit()
 #        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+#        name = session['curruser']
 #        return render_template('posts.html', posts=all_posts,msg=name)
 #     else:
 #         all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
-#         return render_template('posts.html', posts=all_posts)
+#         name = session['curruser']
+#         return render_template('posts.html', posts=all_posts,msg=name,numlike=to_like.num_like+1)
 if __name__ == "__main__":
     app.run(debug=True)
