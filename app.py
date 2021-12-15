@@ -10,7 +10,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db = SQLAlchemy(app)
 
 
-class CodeSpeedyBlog(db.Model):
+class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False, unique=True)
     content = db.Column(db.Text, nullable=False)
@@ -42,7 +42,7 @@ def login():
          cursorObj.execute('SELECT * FROM user WHERE username = ? AND password = ?', (user_name, user_pwd))
          account = cursorObj.fetchone()
          if account:
-             all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+             all_posts = Post.query.order_by(Post.posted_on).all()
              return render_template('posts.html', posts=all_posts,msg=user_name)
          else:
              msg = 'Incorrect username or password !'
@@ -92,16 +92,16 @@ def posts():
         post_title = request.form['title']
         post_content = request.form['post']
         post_author = session['curruser']
-        new_post = CodeSpeedyBlog(title=post_title,
+        new_post = Post(title=post_title,
                         content=post_content, posted_by=post_author)
         db.session.add(new_post)
         db.session.commit()
 
-        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+        all_posts = Post.query.order_by(Post.posted_on).all()
         name = session['curruser']
         return render_template('posts.html', posts=all_posts,msg=name)
     else:
-        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+        all_posts = Post.query.order_by(Post.posted_on).all()
         name = session['curruser']
         return render_template('posts.html', posts=all_posts,msg=name)
 
@@ -111,35 +111,35 @@ def new_post():
         post_title = request.form['title']
         post_content = request.form['post']
         post_author = session['curruser']
-        new_post = CodeSpeedyBlog(title=post_title,
+        new_post = Post(title=post_title,
                         content=post_content, posted_by=post_author)
         db.session.add(new_post)
         db.session.commit()
-        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+        all_posts = Post.query.order_by(Post.posted_on).all()
         name = session['curruser']
         return render_template('posts.html', posts=all_posts,msg=name)
     else:
-        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+        all_posts = Post.query.order_by(Post.posted_on).all()
         name = session['curruser']
         return render_template('new_post.html',posts=all_posts,msg=name)
 @app.route('/posts/edit/<int:id>', methods=['GET', 'POST'])
 def edit(id):
-    to_edit = CodeSpeedyBlog.query.get_or_404(id)
+    to_edit = Post.query.get_or_404(id)
     if request.method == 'POST':
         to_edit.title = request.form['title']
         to_edit.content = request.form['post']
         db.session.commit()
-        all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+        all_posts = Post.query.order_by(Post.posted_on).all()
         name = session['curruser']
         return render_template('posts.html', posts=all_posts,msg=name)
     else:
         return render_template('edit.html', post=to_edit)
 @app.route('/posts/delete/<int:id>')
 def delete(id):
-    to_delete = CodeSpeedyBlog.query.get_or_404(id)
+    to_delete = Post.query.get_or_404(id)
     db.session.delete(to_delete)
     db.session.commit()
-    all_posts = CodeSpeedyBlog.query.order_by(CodeSpeedyBlog.posted_on).all()
+    all_posts = Post.query.order_by(Post.posted_on).all()
     name = session['curruser']
     return render_template('posts.html', posts=all_posts,msg=name)
 @app.route('/logout')
