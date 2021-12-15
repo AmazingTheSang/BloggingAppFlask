@@ -49,7 +49,7 @@ def login():
              return render_template('login.html',msg=msg)   
     else:
       msg = 'Incorrect username or password !'
-      return render_template('login.html',msg=msg)
+      return render_template('login.html',msg="")
 @app.route('/signup',  methods=['GET', 'POST'])
 def signup():
      msg = ''
